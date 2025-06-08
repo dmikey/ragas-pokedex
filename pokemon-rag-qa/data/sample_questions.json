@@ -1,0 +1,38 @@
+[
+  {
+    "pokemon": "charizard",
+    "question": "What type is Charizard?"
+  },
+  {
+    "pokemon": "pikachu",
+    "question": "How much does Pikachu weigh?"
+  },
+  {
+    "pokemon": "bulbasaur",
+    "question": "What is the height of Bulbasaur?"
+  },
+  {
+    "pokemon": "eevee",
+    "question": "Which Pokémon evolves from Eevee?"
+  },
+  {
+    "pokemon": "gengar",
+    "question": "What is the base experience of Gengar?"
+  },
+  {
+    "pokemon": "snorlax",
+    "question": "What is the ability of Snorlax?"
+  },
+  {
+    "pokemon": "mewtwo",
+    "question": "What moves can Mewtwo learn?"
+  },
+  {
+    "pokemon": "squirtle",
+    "question": "What is the habitat of Squirtle?"
+  },
+  {
+    "pokemon": "jigglypuff",
+    "question": "What is the color of Jigglypuff?"
+  }
+]

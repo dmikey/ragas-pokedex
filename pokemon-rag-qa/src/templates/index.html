@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 95vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-header .subtitle {
+            font-size: 0.8rem;
+            font-weight: normal;
+            opacity: 0.8;
+        }
+
+        .personality-selector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .personality-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 5px;
+            opacity: 0.9;
+        }
+
+        .personality-btn {
+            padding: 5px 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .personality-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .personality-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            text-align: right;
+        }
+
+        .user-message .message-bubble {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            display: inline-block;
+            padding: 15px 20px;
+            border-radius: 20px 20px 5px 20px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .bot-message .message-bubble {
+            background: white;
+            color: #333;
+            display: inline-block;
+            padding: 15px 20px;
+            border-radius: 20px 20px 20px 5px;
+            max-width: 70%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+            word-wrap: break-word;
+        }
+
+        /* Rolodex Cards Container */
+        .info-cards-container {
+            margin-top: 8px;
+            position: relative;
+            height: 150px;
+            /* Ensure container has enough height for tabs + cards */
+            padding-top: 25px;
+            /* Space for tabs */
+        }
+
+        .info-card {
+            position: absolute;
+            width: 100%;
+            padding: 12px;
+            border-radius: 0 0 8px 8px;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            height: 150px;
+            top: 25px;
+            /* Position below tabs */
+        }
+
+        .eval-scores {
+            background: #f8f9fa;
+            border-left: 4px solid #4ECDC4;
+            z-index: 2;
+            /* Front card by default */
+        }
+
+        .pokemon-info {
+            background: #e8f4f8;
+            border-left: 4px solid #FF6B6B;
+            z-index: 1;
+            /* Back card - no transform needed, positioning handled by active states */
+        }
+
+        /* Rolodex Tabs - positioned at top edge */
+        .card-tab {
+            position: absolute;
+            top: -27px;
+            padding: 4px 12px;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 10;
+            border-bottom: 2px solid transparent;
+        }
+
+        .card-tab:hover {
+            transform: scale(1.05) !important;
+            opacity: 1 !important;
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Hover effects for cards */
+        .info-card:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .eval-scores .card-tab {
+            background: #4ECDC4;
+            left: 0;
+            border-bottom-color: #4ECDC4;
+        }
+
+        .pokemon-info .card-tab {
+            background: #FF6B6B;
+            left: 90px;
+            /* Position next to first tab with some spacing */
+            border-bottom-color: #FF6B6B;
+        }
+
+        /* Active states - rolodex style */
+        .info-card.active {
+            z-index: 3;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-card:not(.active) {
+            z-index: 1;
+            opacity: 0.85;
+        }
+
+        /* Active tab styling */
+        .info-card.active .card-tab {
+            border-bottom-color: transparent;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card:not(.active) .card-tab {
+            opacity: 0.8;
+            transform: scale(0.95);
+        }
+
+        .info-card:hover .card-tab {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+
+        .score-bar {
+            width: 100px;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-left: 10px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            transition: width 0.5s ease;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            position: relative;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #4ECDC4;
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+
+        .clear-input-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .clear-input-btn:hover {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .chat-input:not(:placeholder-shown)+.clear-input-btn {
+            display: flex;
+        }
+
+        .chat-input:focus+.clear-input-btn {
+            display: flex;
+        }
+
+        .send-button-group {
+            position: relative;
+            display: inline-block;
+        }
+
+        .send-btn {
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .send-options {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
+            padding: 8px;
+            margin-bottom: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            min-width: 180px;
+        }
+
+        .send-button-group:hover .send-options {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .send-option {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .send-option:hover {
+            background: #f8f9fa;
+        }
+
+        .send-option.variety {
+            color: #FF6B6B;
+        }
+
+        .dropdown-arrow {
+            font-size: 0.7rem;
+            margin-left: 4px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4ECDC4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .variety-responses {
+            margin-top: 15px;
+        }
+
+        .variety-response {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .response-header {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .variety-stats {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .meta-info {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .fallback-notification {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            color: #856404;
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fallback-notification .icon {
+            font-size: 1rem;
+        }
+
+        /* Modal Styles for RAGAS Help */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #666;
+        }
+
+        .metric-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #4ECDC4;
+            background: #f8f9fa;
+        }
+
+        .metric-name {
+            font-weight: bold;
+            color: #4ECDC4;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .metric-description {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .help-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .help-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        /* Improved chat styling */
+        .chat-header {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-message .message-bubble {
+            background: transparent;
+            color: #333;
+            box-shadow: none;
+            border: none;
+            padding: 0;
+        }
+
+        .sample-questions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .sample-question {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .sample-question:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(5px);
+        }
+
+        /* Better button styling */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .main-input-row {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        /* Responsive design improvements */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+                height: 95vh;
+            }
+
+            .input-group {
+                gap: 10px;
+            }
+
+            .send-options {
+                min-width: 150px;
+                right: -20px;
+            }
+
+            .personality-selector {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .personality-btn {
+                font-size: 0.8rem;
+                padding: 4px 10px;
+            }
+
+            .modal-content {
+                margin: 20px;
+                max-width: none;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- RAGAS Help Modal -->
+    <div id="ragasModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📊 RAGAS Evaluation Metrics</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="metric-item">
+                <div class="metric-name">🎯 Factual Accuracy</div>
+                <div class="metric-description">
+                    Measures how factually correct and grounded the response is based on the retrieved Pokémon data.
+                    Higher scores indicate the answer contains accurate information without hallucinations.
+                </div>
+            </div>
+
+            <div class="metric-item">
+                <div class="metric-name">✨ Response Quality</div>
+                <div class="metric-description">
+                    Evaluates the overall structure, completeness, and clarity of the response.
+                    Takes into account proper grammar, logical flow, and appropriate length.
+                </div>
+            </div>
+
+            <div class="metric-item">
+                <div class="metric-name">🎭 Engagement</div>
+                <div class="metric-description">
+                    Measures how engaging and personality-driven the response is.
+                    Considers enthusiasm, interactivity, and alignment with the selected personality style.
+                </div>
+            </div>
+
+            <div class="metric-item">
+                <div class="metric-name">🔄 Similarity</div>
+                <div class="metric-description">
+                    Compares semantic similarity between the generated response and expected answers.
+                    Helps ensure responses stay relevant to the original question.
+                </div>
+            </div>
+
+            <div class="metric-item">
+                <div class="metric-name">🏆 Overall Score</div>
+                <div class="metric-description">
+                    A weighted average of all metrics providing a comprehensive quality assessment.
+                    Values range from 0.0 to 1.0, with higher scores indicating better responses.
+                </div>
+            </div>
+
+            <div
+                style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 10px; border-left: 4px solid #17a2b8;">
+                <strong>💡 How to Interpret Scores:</strong><br>
+                • 0.8-1.0: Excellent response<br>
+                • 0.6-0.8: Good response<br>
+                • 0.4-0.6: Fair response<br>
+                • 0.0-0.4: Needs improvement
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <button class="help-btn" onclick="openModal()" title="Learn about RAGAS metrics">?</button>
+            <div class="header-controls">
+                <div class="header-title">
+                    <h1>🔥 Pokémon Chat <span class="subtitle">• Powered by RAGAS</span></h1>
+                    <p>Ask me anything about Pokémon and see AI-powered quality scores!</p>
+                </div>
+            </div>
+            <div class="personality-selector">
+                <label class="personality-label">Response Style:</label>
+                <button class="personality-btn active" data-personality="random">Random</button>
+                <button class="personality-btn" data-personality="enthusiastic">Enthusiastic</button>
+                <button class="personality-btn" data-personality="scholarly">Scholarly</button>
+                <button class="personality-btn" data-personality="casual">Casual</button>
+                <button class="personality-btn" data-personality="factual">Factual</button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message welcome-message">
+                <div class="message-bubble">
+                    <strong>👋 Welcome to Pokémon Chat!</strong><br>
+                    I'm your AI-powered Pokémon expert with real-time quality evaluation. Ask me about specific
+                    Pokémon's
+                    stats, abilities, or characteristics, or ask general questions about the Pokémon world!
+
+                    <div class="sample-questions">
+                        <div class="sample-question" onclick="askSampleQuestion(this)">
+                            🔥 "What type is Charizard and what are its abilities?"
+                        </div>
+                        <div class="sample-question" onclick="askSampleQuestion(this)">
+                            ⚡ "How much does Pikachu weigh and what's its height?"
+                        </div>
+                        <div class="sample-question" onclick="askSampleQuestion(this)">
+                            🌱 "Tell me about Bulbasaur's characteristics"
+                        </div>
+                        <div class="sample-question" onclick="askSampleQuestion(this)">
+                            🌟 "How many Pokémon types are there?"
+                        </div>
+                        <div class="sample-question" onclick="askSampleQuestion(this)">
+                            🏆 "What are legendary Pokémon?"
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Ask about Pokémon..." />
+                    <button class="clear-input-btn" id="clearBtn" title="Clear input">✕</button>
+                </div>
+                <div class="send-button-group">
+                    <div class="send-options">
+                        <button class="send-option variety" id="varietyBtn">🧪 Variety Test</button>
+                    </div>
+                    <button class="send-btn" id="sendBtn">
+                        Send
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPersonality = 'random';
+        let isLoading = false;
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('ragasModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('ragasModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('ragasModal').addEventListener('click', (e) => {
+            if (e.target.id === 'ragasModal') {
+                closeModal();
+            }
+        });
+
+        // Sample question functionality
+        function askSampleQuestion(element) {
+            const questionText = element.textContent.replace(/^[🔥⚡🌱]\s*"/, '').replace(/"$/, '');
+            document.getElementById('chatInput').value = questionText;
+            sendMessage();
+        }
+
+        // Personality selector
+        document.querySelectorAll('.personality-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.personality-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentPersonality = btn.dataset.personality;
+            });
+        });
+
+        // Chat input handling
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const varietyBtn = document.getElementById('varietyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !isLoading) {
+                sendMessage();
+            }
+        });
+
+        chatInput.addEventListener('input', (e) => {
+            toggleClearButton();
+        });
+
+        chatInput.addEventListener('focus', (e) => {
+            toggleClearButton();
+        });
+
+        chatInput.addEventListener('blur', (e) => {
+            setTimeout(() => {
+                if (!chatInput.value.trim()) {
+                    clearBtn.style.display = 'none';
+                }
+            }, 100);
+        });
+
+        function toggleClearButton() {
+            if (chatInput.value.trim() || document.activeElement === chatInput) {
+                clearBtn.style.display = 'flex';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+        }
+
+        sendBtn.addEventListener('click', (e) => {
+            // Prevent dropdown from triggering when clicking the main button
+            if (!isLoading && !e.target.closest('.send-options')) {
+                sendMessage();
+            }
+        });
+
+        varietyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!isLoading) sendVarietyTest();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            clearInput();
+        });
+
+        function clearInput() {
+            chatInput.value = '';
+            chatInput.focus();
+        }
+
+        function clearChat() {
+            // Keep only the welcome message
+            const welcomeMessage = chatMessages.querySelector('.welcome-message');
+            chatMessages.innerHTML = '';
+            chatMessages.appendChild(welcomeMessage);
+        }
+
+        function addMessage(content, isUser = false, isHtml = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+
+            if (isHtml) {
+                bubbleDiv.innerHTML = content;
+            } else {
+                bubbleDiv.textContent = content;
+            }
+
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            return messageDiv;
+        }
+
+        function addLoadingMessage() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.innerHTML = '<div class="spinner"></div>';
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return loadingDiv;
+        }
+
+        function createScoreBar(score) {
+            return `
+                <div class="score-bar">
+                    <div class="score-fill" style="width: ${score * 100}%"></div>
+                </div>
+            `;
+        }
+
+        function formatEvalScores(scores, responseTime, usedFallback = false) {
+            const fallbackNotification = usedFallback ? `
+                <div class="fallback-notification">
+                    <span class="icon">⚠️</span>
+                    <span>Using fallback scoring (RAGAS evaluation unavailable)</span>
+                </div>
+            ` : '';
+
+            return `
+                <div class="eval-scores info-card active" data-card="eval">
+                    <div class="card-tab">📊 Eval Scores</div>
+                    <strong>📊 RAGAS Evaluation Scores:</strong>
+                    ${fallbackNotification}
+                    <div class="score-item">
+                        <span>Factual Accuracy: ${scores.factual_accuracy}</span>
+                        ${createScoreBar(scores.factual_accuracy)}
+                    </div>
+                    <div class="score-item">
+                        <span>Response Quality: ${scores.response_quality}</span>
+                        ${createScoreBar(scores.response_quality)}
+                    </div>
+                    <div class="score-item">
+                        <span>Engagement: ${scores.engagement}</span>
+                        ${createScoreBar(scores.engagement)}
+                    </div>
+                    <div class="score-item">
+                        <span><strong>Overall: ${scores.overall}</strong></span>
+                        ${createScoreBar(scores.overall)}
+                    </div>
+                    <div class="meta-info">Response time: ${responseTime}ms | Personality: ${currentPersonality}</div>
+                </div>
+            `;
+        }
+
+        function formatPokemonInfo(pokemonData, pokemonName) {
+            return `
+                <div class="pokemon-info info-card" data-card="pokemon">
+                    <div class="card-tab">🔍 Knowledge Info</div>
+                    <strong>🔍 ${pokemonName} Info:</strong><br>
+                    Types: ${pokemonData.types.join(', ')}<br>
+                    Weight: ${pokemonData.weight}<br>
+                    Height: ${pokemonData.height}<br>
+                    Abilities: ${pokemonData.abilities.join(', ')}
+                </div>
+            `;
+        }
+
+        // Function to create the tabbed cards container
+        function createTabbedCards(evalHtml, pokemonHtml) {
+            return `
+                <div class="info-cards-container">
+                    <div style="font-size: 0.6rem; color: #999; margin-bottom: 3px; text-align: right; opacity: 0.8;">💡 Click tabs to switch</div>
+                    ${evalHtml}
+                    ${pokemonHtml}
+                </div>
+            `;
+        }
+
+        // Function to switch between tabs
+        function switchCard(container, cardType) {
+            console.log('Switching to card type:', cardType);
+            const cards = container.querySelectorAll('.info-card');
+            cards.forEach(card => {
+                if (card.dataset.card === cardType) {
+                    card.classList.add('active');
+                    console.log('Activated card:', cardType);
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+        }
+
+        // Function to add click handlers to cards
+        function addCardClickHandlers(container) {
+            console.log('Adding click handlers to cards');
+            const cards = container.querySelectorAll('.info-card');
+            cards.forEach(card => {
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    console.log('Card clicked:', card.dataset.card);
+                    switchCard(container, card.dataset.card);
+                });
+            });
+
+            // Also add click handlers to tabs specifically
+            const tabs = container.querySelectorAll('.card-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const card = tab.closest('.info-card');
+                    console.log('Tab clicked:', card.dataset.card);
+                    switchCard(container, card.dataset.card);
+                });
+            });
+        }
+
+        async function sendMessage() {
+            const question = chatInput.value.trim();
+            if (!question) return;
+
+            // Add user message
+            addMessage(question, true);
+            chatInput.value = '';
+
+            // Show loading
+            isLoading = true;
+            sendBtn.disabled = true;
+            varietyBtn.disabled = true;
+            const loadingDiv = addLoadingMessage();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        personality: currentPersonality
+                    })
+                });
+
+                const data = await response.json();
+
+                // Remove loading
+                loadingDiv.remove();
+
+                if (data.error) {
+                    addMessage(`❌ ${data.error}`, false);
+                } else {
+                    // Create tabbed cards
+                    const evalHtml = formatEvalScores(data.eval_scores, data.response_time_ms, data.used_fallback);
+                    const pokemonHtml = formatPokemonInfo(data.pokemon_data, data.pokemon_name);
+                    const tabbedCards = createTabbedCards(evalHtml, pokemonHtml);
+
+                    // Add bot response with tabbed cards
+                    const fullResponse = data.answer + tabbedCards;
+                    const messageElement = addMessage(fullResponse, false, true);
+
+                    // Add click handlers to the cards
+                    const container = messageElement.querySelector('.info-cards-container');
+                    if (container) {
+                        addCardClickHandlers(container);
+                    }
+                }
+            } catch (error) {
+                loadingDiv.remove();
+                addMessage(`❌ Error: ${error.message}`, false);
+            } finally {
+                isLoading = false;
+                sendBtn.disabled = false;
+                varietyBtn.disabled = false;
+            }
+        }
+
+        async function sendVarietyTest() {
+            const question = chatInput.value.trim();
+            if (!question) {
+                alert('Please enter a question first!');
+                return;
+            }
+
+            // Add user message
+            addMessage(`🧪 Variety Test: ${question}`, true);
+
+            // Show loading
+            isLoading = true;
+            sendBtn.disabled = true;
+            varietyBtn.disabled = true;
+            const loadingDiv = addLoadingMessage();
+
+            try {
+                const response = await fetch('/variety_test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        personality: currentPersonality,
+                        num_responses: 3
+                    })
+                });
+
+                const data = await response.json();
+
+                // Remove loading
+                loadingDiv.remove();
+
+                if (data.error) {
+                    addMessage(`❌ ${data.error}`, false);
+                } else {
+                    // Format variety test results
+                    let varietyHtml = `<strong>🔬 Variety Test Results for ${data.pokemon_name}:</strong><br><br>`;
+
+                    data.responses.forEach((response, index) => {
+                        const evalHtml = formatEvalScores(response.eval_scores, '', data.used_fallback);
+                        const pokemonHtml = formatPokemonInfo(data.pokemon_data, data.pokemon_name);
+                        const tabbedCards = createTabbedCards(evalHtml, pokemonHtml);
+
+                        varietyHtml += `
+                            <div class="variety-response">
+                                <div class="response-header">Response ${response.response_index}:</div>
+                                <div>${response.answer}</div>
+                                ${tabbedCards}
+                            </div>
+                        `;
+                    });
+
+                    varietyHtml += `
+                        <div class="variety-stats">
+                            <strong>📈 RAGAS Variety Analysis:</strong><br>
+                            Variety Score: ${data.variety_score} (higher = more diverse responses)<br>
+                            Total Generation Time: ${data.total_time_ms}ms<br>
+                            Personality Mode: ${data.personality_mode}
+                        </div>
+                    `;
+
+                    const messageElement = addMessage(varietyHtml, false, true);
+
+                    // Add click handlers to all card containers
+                    const containers = messageElement.querySelectorAll('.info-cards-container');
+                    containers.forEach(container => {
+                        addCardClickHandlers(container);
+                    });
+
+                    chatInput.value = '';
+                }
+            } catch (error) {
+                loadingDiv.remove();
+                addMessage(`❌ Error: ${error.message}`, false);
+            } finally {
+                isLoading = false;
+                sendBtn.disabled = false;
+                varietyBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

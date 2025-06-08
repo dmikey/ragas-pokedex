@@ -1,0 +1,8 @@
+requests
+openai
+ragas @ git+https://github.com/explodinggradients/ragas.git@revert-2031-feat/experimental
+pandas
+numpy
+python-dotenv
+flask
+flask-cors
